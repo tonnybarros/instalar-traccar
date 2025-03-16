@@ -1,6 +1,12 @@
 # Instalador traccar com Mysql
 Auto instalação do Traccar em sua última versão com driver mysql
 
+Entre no seu servidor Linux, e execute essa unica linha abaixo.
+
+```bash
+wget https://raw.githubusercontent.com/tonnybarros/instalar-traccar/main/instalador_traccar.sh && chmod +x instalador_traccar.sh && ./instalador_traccar.sh
+```
+
 No final da instalação, pode gerenciar o Traccar executando no terminal assim:
 
 iniciar-traccar (Iniciar o Traccar)

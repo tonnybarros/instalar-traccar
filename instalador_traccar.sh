@@ -118,7 +118,11 @@ sudo tee /usr/local/bin/status-traccar > /dev/null <<EOL
 #!/bin/bash
 sudo systemctl status traccar
 EOL
-sudo chmod +x /usr/local/bin/iniciar-traccar /usr/local/bin/parar-traccar /usr/local/bin/status-traccar
+sudo tee /usr/local/bin/reiniciar-traccar > /dev/null <<EOL
+#!/bin/bash
+sudo systemctl restart traccar
+EOL
+sudo chmod +x /usr/local/bin/iniciar-traccar /usr/local/bin/parar-traccar /usr/local/bin/status-traccar /usr/local/bin/reiniciar-traccar
 
 # Finalizando instalação
 echo "Instalação concluída com sucesso!"

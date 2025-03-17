@@ -28,7 +28,7 @@ sudo apt update && sudo apt upgrade -y
 
 # Instalando dependências
 echo "Instalando dependências..."
-sudo apt install unzip openjdk-17-jre mysql-server nginx certbot python3-certbot-nginx curl -y
+sudo apt install unzip mysql-server nginx certbot python3-certbot-nginx curl -y
 
 # Configuração do MySQL
 echo "Configurando MySQL..."

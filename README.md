@@ -1,4 +1,6 @@
 # Instalador traccar com Mysql
+Auto Install Traccar
+
 Auto instalação do Traccar em sua última versão com driver mysql
 
 Entre no seu servidor Linux, e execute essa unica linha abaixo.

@@ -15,4 +15,6 @@ parar-traccar (Parar o Traccar)
 
 status-traccar (Ver status do Traccar)
 
+reiniciar-traccar (Reiniciar o Traccar)
+
 Teste efetuados em servidor Hetzner com Ubuntu 20.04

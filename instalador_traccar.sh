@@ -28,7 +28,7 @@ sudo apt update && sudo apt upgrade -y
 
 # Instalando dependências
 echo "Instalando dependências..."
-sudo apt install unzip mysql-server nginx certbot python3-certbot-nginx curl -y
+sudo apt install unzip openjdk-17-jre mysql-server nginx certbot python3-certbot-nginx curl -y
 
 # Configuração do MySQL
 echo "Configurando MySQL..."
@@ -127,5 +127,5 @@ sudo chmod +x /usr/local/bin/iniciar-traccar /usr/local/bin/parar-traccar /usr/l
 # Finalizando instalação
 echo "Instalação concluída com sucesso!"
 echo "Gerencie o Traccar com:"
-echo "iniciar-traccar | parar-traccar | status-traccar"
+echo "iniciar-traccar | parar-traccar | status-traccar | reiniciar-traccar"
 echo "Acesse via: https://$DOMAIN"

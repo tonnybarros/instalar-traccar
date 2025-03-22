@@ -126,14 +126,23 @@ sudo tee /usr/local/bin/log-traccar > /dev/null <<EOL
 #!/bin/bash
 sudo tail -f /opt/traccar/logs/tracker-server.log
 EOL
+sudo tee /usr/local/bin/log-traccar-pesquisa > /dev/null <<EOL
+#!/bin/bash
+if [ -z "\$1" ]; then
+    echo "Por favor, forneça um termo de pesquisa."
+    echo "Uso: log-traccar-pesquisa termo"
+    exit 1
+fi
+sudo tail -f /opt/traccar/logs/tracker-server.log | grep --color=auto "\$1"
+EOL
 sudo tee /usr/local/bin/editar-traccar > /dev/null <<EOL
 #!/bin/bash
 sudo nano /opt/traccar/conf/traccar.xml
 EOL
-sudo chmod +x /usr/local/bin/iniciar-traccar /usr/local/bin/parar-traccar /usr/local/bin/status-traccar /usr/local/bin/reiniciar-traccar /usr/local/bin/log-traccar /usr/local/bin/editar-traccar
+sudo chmod +x /usr/local/bin/iniciar-traccar /usr/local/bin/parar-traccar /usr/local/bin/status-traccar /usr/local/bin/reiniciar-traccar /usr/local/bin/log-traccar /usr/local/bin/editar-traccar /usr/local/bin/log-traccar-pesquisa
 
 # Finalizando instalação
 echo "Instalação concluída com sucesso!"
 echo "Gerencie o Traccar com:"
-echo "iniciar-traccar | parar-traccar | status-traccar | reiniciar-traccar | log-traccar | editar-traccar"
+echo "iniciar-traccar | parar-traccar | status-traccar | reiniciar-traccar | log-traccar | log-traccar-pesquisa xxxx | editar-traccar"
 echo "Acesse via: https://$DOMAIN"

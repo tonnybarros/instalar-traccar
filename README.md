@@ -19,4 +19,23 @@ status-traccar (Ver status do Traccar)
 
 reiniciar-traccar (Reiniciar o Traccar)
 
+log-traccar (Visualizar o log em tempo real) 
+o mesmo que:
+```bash
+sudo tail -f /opt/traccar/logs/tracker-server.log
+```
+
+log-traccar-pesquisa (Visualizar o log em tempo real do termo específico) 
+o mesmo que:
+```bash
+sudo tail -f /opt/traccar/logs/tracker-server.log | grep XXXX
+```
+Troque o xxxx pela palavra que deseja procurar no log em tempo real
+
+editar-traccar (Visualizar o log em tempo real) 
+o mesmo que:
+```bash
+sudo nano /opt/traccar/conf/traccar.xml
+```
+
 Teste efetuados em servidor Hetzner com Ubuntu 20.04

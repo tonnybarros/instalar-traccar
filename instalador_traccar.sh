@@ -122,10 +122,18 @@ sudo tee /usr/local/bin/reiniciar-traccar > /dev/null <<EOL
 #!/bin/bash
 sudo systemctl restart traccar
 EOL
-sudo chmod +x /usr/local/bin/iniciar-traccar /usr/local/bin/parar-traccar /usr/local/bin/status-traccar /usr/local/bin/reiniciar-traccar
+sudo tee /usr/local/bin/log-traccar > /dev/null <<EOL
+#!/bin/bash
+sudo tail -f /opt/traccar/logs/tracker-server.log
+EOL
+sudo tee /usr/local/bin/editar-traccar > /dev/null <<EOL
+#!/bin/bash
+sudo nano /opt/traccar/conf/traccar.xml
+EOL
+sudo chmod +x /usr/local/bin/iniciar-traccar /usr/local/bin/parar-traccar /usr/local/bin/status-traccar /usr/local/bin/reiniciar-traccar /usr/local/bin/log-traccar /usr/local/bin/editar-traccar
 
 # Finalizando instalação
 echo "Instalação concluída com sucesso!"
 echo "Gerencie o Traccar com:"
-echo "iniciar-traccar | parar-traccar | status-traccar | reiniciar-traccar"
+echo "iniciar-traccar | parar-traccar | status-traccar | reiniciar-traccar | log-traccar | editar-traccar"
 echo "Acesse via: https://$DOMAIN"

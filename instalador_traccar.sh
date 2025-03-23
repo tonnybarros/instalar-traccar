@@ -13,7 +13,7 @@ echo "   ██║   ██║  ██║██║  ██║╚█████�
 echo "   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝╚═════╝ ╚═╝  ╚═╝ v1.6"
 echo ""
 echo "Instalador do Traccar - Última versão disponível"
-echo "Suporte: tectonny@gmail.com"
+echo
 read -p "Para iniciar tecle ENTER"
 
 # Solicitação prévia de dados

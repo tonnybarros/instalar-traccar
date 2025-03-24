@@ -122,7 +122,7 @@ configure_traccar() {
     DB_URL=""
     if [[ "$DB_TYPE" == "mysql" ]]; then
         DB_DRIVER="com.mysql.cj.jdbc.Driver"
-        DB_URL="jdbc:mysql://localhost:3306/$DB_NAME?serverTimezone=UTC&amp;useSSL=false&amp;allowPublicKeyRetrieval=true"
+        DB_URL="jdbc:mysql://localhost:3306/$DB_NAME?allowPublicKeyRetrieval=true&amp;serverTimezone=UTC&amp;useSSL=false&amp;allowMultiQueries=true&amp;autoReconnect=true&amp;useUnicode=yes&amp;characterEncoding=UTF-8&amp;sessionVariables=sql_mode=''"
     elif [[ "$DB_TYPE" == "postgresql" ]]; then
         DB_DRIVER="org.postgresql.Driver"
         DB_URL="jdbc:postgresql://localhost:5432/$DB_NAME"
@@ -135,7 +135,14 @@ configure_traccar() {
     <entry key='database.url'>$DB_URL</entry>
     <entry key='database.user'>$DB_USER</entry>
     <entry key='database.password'>$DB_PASS</entry>
+    <entry key='processing.copyAttributes.enable'>true</entry> <!-- Ative a cópia dos atributos ausentes da última posição para a atual -->
+    <entry key='processing.copyAttributes'>power,ignition,battery,blocked,driverUniqueId</entry> <!-- Lista de atributos a serem copiados se estiverem ausentes. Os nomes dos atributos devem ser separados por vírgula. Por exemplo "power,ignition,battery" -->
+    <entry key='processing.remoteAddress.enable'>true</entry> <!--  informações de endereços IP do dispositivo -->
+    <entry key='distance.enable'>true</entry> <!-- Calcule e acumule a distância percorrida para todos os dispositivos. O valor da distância está em metros e é armazenado nos atributos de posição. -->
+    <!-- URL DE ACESSO EXTERNO PELOS APPS-->
+	<entry key='web.url'>http:/$DOMAIN</entry>
 </properties>
+
 EOL
 }
 

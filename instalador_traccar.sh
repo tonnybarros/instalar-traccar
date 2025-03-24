@@ -152,6 +152,13 @@ server {
         proxy_set_header Host \$host;
         proxy_cache_bypass \$http_upgrade;
     }
+
+	location /api/socket {
+        proxy_pass http://localhost:8082/api/socket;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
 }
 EOL
     sudo ln -sf /etc/nginx/sites-available/traccar /etc/nginx/sites-enabled/

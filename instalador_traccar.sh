@@ -10,10 +10,10 @@ echo "╚══██╔══╝██╔══██╗██╔══██�
 echo "   ██║   ██████╔╝███████║██║     ██║     ███████║██████╔╝ "
 echo "   ██║   ██╔══██╗██╔══██║██║     ██║     ██╔══██║██╔══██╗"
 echo "   ██║   ██║  ██║██║  ██║╚██████╗╚██████╗██║  ██║██║  ██║"
-echo "   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝╚═════╝ ╚═╝  ╚═╝ v1.6"
+echo "   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝╚═════╝ ╚═╝  ╚═╝ v2.0"
 echo ""
 echo "Instalador do Traccar - Última versão disponível"
-echo
+echo "O script sempre vai buscar a ultima versão disponível no Github"
 read -p "Para iniciar tecle ENTER"
 
 # Solicitação prévia de dados
@@ -43,10 +43,6 @@ LATEST_VERSION=$(curl -s https://api.github.com/repos/traccar/traccar/releases/l
 wget https://github.com/traccar/traccar/releases/download/$LATEST_VERSION/traccar-linux-64-${LATEST_VERSION:1}.zip
 unzip traccar-linux-64-${LATEST_VERSION:1}.zip
 sudo ./traccar.run
-
-# Baixar driver MySQL
-echo "Baixando driver MySQL..."
-sudo wget -P /opt/traccar/lib https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.3.0/mysql-connector-j-8.3.0.jar
 
 # Configurar banco de dados no Traccar
 echo "Configurando conexão com o banco de dados no Traccar..."
@@ -84,25 +80,6 @@ sudo nginx -t && sudo systemctl restart nginx
 # SSL automático via Certbot
 sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos --register-unsafely-without-email --redirect
 
-# Criando o serviço systemd
-echo "Criando o serviço do Traccar..."
-sudo tee /etc/systemd/system/traccar.service > /dev/null <<EOL
-[Unit]
-Description=Traccar GPS Tracking System
-After=network.target
-
-[Service]
-Type=simple
-WorkingDirectory=/opt/traccar
-ExecStart=/usr/bin/java -jar tracker-server.jar conf/traccar.xml
-SuccessExitStatus=143
-
-[Install]
-WantedBy=multi-user.target
-EOL
-
-sudo systemctl daemon-reload
-sudo systemctl enable traccar
 sudo systemctl start traccar
 
 # Criando comandos amigáveis

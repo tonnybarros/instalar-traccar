@@ -175,6 +175,44 @@ configure_memory() {
     fi
 }
 
+insert_friendly_commands() {
+# Criando comandos amigáveis
+sudo tee /usr/local/bin/iniciar-traccar > /dev/null <<EOL
+#!/bin/bash
+sudo systemctl start traccar
+EOL
+sudo tee /usr/local/bin/parar-traccar > /dev/null <<EOL
+#!/bin/bash
+sudo systemctl stop traccar
+EOL
+sudo tee /usr/local/bin/status-traccar > /dev/null <<EOL
+#!/bin/bash
+sudo systemctl status traccar
+EOL
+sudo tee /usr/local/bin/reiniciar-traccar > /dev/null <<EOL
+#!/bin/bash
+sudo systemctl restart traccar
+EOL
+sudo tee /usr/local/bin/log-traccar > /dev/null <<EOL
+#!/bin/bash
+sudo tail -f /opt/traccar/logs/tracker-server.log
+EOL
+sudo tee /usr/local/bin/log-traccar-pesquisa > /dev/null <<EOL
+#!/bin/bash
+if [ -z "\$1" ]; then
+    echo "Por favor, forneça um termo de pesquisa."
+    echo "Uso: log-traccar-pesquisa termo"
+    exit 1
+fi
+sudo tail -f /opt/traccar/logs/tracker-server.log | grep --color=auto "\$1"
+EOL
+sudo tee /usr/local/bin/editar-traccar > /dev/null <<EOL
+#!/bin/bash
+sudo nano /opt/traccar/conf/traccar.xml
+EOL
+sudo chmod +x /usr/local/bin/iniciar-traccar /usr/local/bin/parar-traccar /usr/local/bin/status-traccar /usr/local/bin/reiniciar-traccar /usr/local/bin/log-traccar /usr/local/bin/editar-traccar /usr/local/bin/log-traccar-pesquisa
+}
+
 finish_installation() {
     echo "Instalação concluída com sucesso!"
     echo "Acesse via: https://$DOMAIN"
@@ -189,4 +227,5 @@ configure_traccar
 configure_nginx
 configure_ssl
 configure_memory
+insert_friendly_commands
 finish_installation

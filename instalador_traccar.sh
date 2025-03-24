@@ -41,6 +41,9 @@ display_banner() {
     read -p "Para iniciar, tecle ENTER"
 }
 
+TOTAL_MEMORY_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')  # Memória total em KB
+TOTAL_MEMORY_MB=$((TOTAL_MEMORY_KB / 1024))  # Converter para MB
+
 get_user_input() {
     
     read -p "Digite a versão do Traccar (Ex: 6.6 ou deixe em branco para a última versão): " LATEST_VERSION
@@ -61,6 +64,9 @@ get_user_input() {
     while [[ -z "$DOMAIN" ]]; do
         read -p "Digite seu domínio (ex: rastreamento.meudominio.com): " DOMAIN
     done
+    echo "A memória total do servidor é: ${TOTAL_MEMORY_MB}MB"
+    read -p "Digite a porcentagem da memória do servidor que deseja alocar para o Java (exemplo: 60 para 60%) (Deixe em branco para não editar o serviço): " MEMORY_PERCENT
+
 }
 
 install_dependencies() {
@@ -156,6 +162,19 @@ configure_ssl() {
     sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos --register-unsafely-without-email --redirect
 }
 
+configure_memory() {
+    # Calcular 60% da memória total do servidor em MB
+    if [ ! -z "$MEMORY_PERCENT" ]; then
+        MAX_MEMORY_MB=$((TOTAL_MEMORY_MB * MEMORY_PERCENT / 100)) # Porcentagem de memória em MB
+
+        echo "Configurando a memória máxima de uso do Java (Xmx) para ${MEMORY_PERCENT}% da memória total desse servidor: ${MAX_MEMORY_MB}MB"
+        sudo sed -i "s|ExecStart=/opt/traccar/jre/bin/java -jar tracker-server.jar conf/traccar.xml|ExecStart=/opt/traccar/jre/bin/java -Xmx${MAX_MEMORY_MB}m -jar tracker-server.jar conf/traccar.xml|" /etc/systemd/system/traccar.service
+
+        sudo systemctl daemon-reload
+        sudo systemctl restart traccar
+    fi
+}
+
 finish_installation() {
     echo "Instalação concluída com sucesso!"
     echo "Acesse via: https://$DOMAIN"
@@ -169,4 +188,5 @@ download_traccar
 configure_traccar
 configure_nginx
 configure_ssl
+configure_memory
 finish_installation

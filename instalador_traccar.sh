@@ -10,10 +10,11 @@ echo "╚══██╔══╝██╔══██╗██╔══██�
 echo "   ██║   ██████╔╝███████║██║     ██║     ███████║██████╔╝ "
 echo "   ██║   ██╔══██╗██╔══██║██║     ██║     ██╔══██║██╔══██╗"
 echo "   ██║   ██║  ██║██║  ██║╚██████╗╚██████╗██║  ██║██║  ██║"
-echo "   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝╚═════╝ ╚═╝  ╚═╝ v2.0"
+echo "   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝╚═════╝ ╚═╝  ╚═╝ v2.1"
 echo ""
 echo "Instalador do Traccar - Última versão disponível"
 echo "O script sempre vai buscar a ultima versão disponível no Github"
+echo "O script vai otimizar memória do Java (caso aceite), leia mais aqui: https://www.traccar.org/optimization/"
 read -p "Para iniciar tecle ENTER"
 
 # Solicitação prévia de dados
@@ -22,6 +23,12 @@ read -p "Digite o usuário MySQL que será criado para o Traccar: " DB_USER
 read -sp "Digite a senha para o usuário MySQL: " DB_PASS
 echo ""
 read -p "Digite seu domínio (ex: rastreamento.meudominio.com): " DOMAIN
+
+# Pergunta sobre a porcentagem de memória
+TOTAL_MEMORY_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')  # Memória total em KB
+TOTAL_MEMORY_MB=$((TOTAL_MEMORY_KB / 1024))  # Converter para MB
+echo "A memória total do servidor é: ${TOTAL_MEMORY_MB}MB"
+read -p "Digite a porcentagem da memória do servidor que deseja alocar para o Java (exemplo: 60 para 60%) (Deixe em branco para não editar o serviço): " MEMORY_PERCENT
 
 # Atualizar sistema
 sudo apt update && sudo apt upgrade -y
@@ -80,7 +87,16 @@ sudo nginx -t && sudo systemctl restart nginx
 # SSL automático via Certbot
 sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos --register-unsafely-without-email --redirect
 
-sudo systemctl start traccar
+# Calcular 60% da memória total do servidor em MB
+if [ ! -z "$MEMORY_PERCENT" ]; then
+    MAX_MEMORY_MB=$((TOTAL_MEMORY_MB * MEMORY_PERCENT / 100)) # Porcentagem de memória em MB
+
+    echo "Configurando a memória máxima de uso do Java (Xmx) para ${MEMORY_PERCENT}% da memória total desse servidor: ${MAX_MEMORY_MB}MB"
+    sudo sed -i "s|ExecStart=/opt/traccar/jre/bin/java -jar tracker-server.jar conf/traccar.xml|ExecStart=/opt/traccar/jre/bin/java -Xmx${MAX_MEMORY_MB}m -jar tracker-server.jar conf/traccar.xml|" /etc/systemd/system/traccar.service
+
+    sudo systemctl daemon-reload
+    sudo systemctl restart traccar
+fi
 
 # Criando comandos amigáveis
 sudo tee /usr/local/bin/iniciar-traccar > /dev/null <<EOL
@@ -122,4 +138,10 @@ sudo chmod +x /usr/local/bin/iniciar-traccar /usr/local/bin/parar-traccar /usr/l
 echo "Instalação concluída com sucesso!"
 echo "Gerencie o Traccar com:"
 echo "iniciar-traccar | parar-traccar | status-traccar | reiniciar-traccar | log-traccar | log-traccar-pesquisa xxxx | editar-traccar"
+echo ""
 echo "Acesse via: https://$DOMAIN"
+echo "Crie os dados de acesso no primeiro acesso!"
+echo ""
+echo "Banco do Mysql: $DB_NAME"
+echo "Usuário do Mysql: $DB_USER"
+echo "Senha Mysql: $DB_PASS"

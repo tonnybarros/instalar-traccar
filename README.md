@@ -48,3 +48,15 @@ sudo nano /opt/traccar/conf/traccar.xml
 ```
 
 Teste efetuados em servidor Hetzner com Ubuntu 20.04 e 22.04
+
+## Desenvolvedores
+
+### Programador
+- **Nome:** Tony Barros
+- **Email:** tonybarros@gmail.com
+- **Contato:** +55 21 97912-3851
+
+### Colaborador
+- **Nome:** Michaell Oliveira
+- **Email:** michaelloliveira@gmail.com
+- **Contato:** +55 79 9116-5245

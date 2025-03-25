@@ -2,8 +2,8 @@
 
 # Instalador automático do Traccar com MySQL ou PostgreSQL e SSL via Nginx
 # 
-# Programador: Tony Barros
-# Email: tonybarros@gmail.com
+# Programador: Tonny Barros
+# Email: tonnybarros@gmail.com
 # Contato: +55 21 97912-3851
 # 
 # Colaborador: Michaell Oliveira

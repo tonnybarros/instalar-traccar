@@ -10,13 +10,15 @@ wget https://raw.githubusercontent.com/tonnybarros/instalar-traccar/main/instala
 ```
 
 A instalação vai solicitar:
-- Nome do banco de dados Mysql
-- Usuário do banco de dados Mysql
-- Senha do banco de dados Mysql
+- Versão do Traccar, exemplo 6.6 ou deixe em branco para instalar a ultima versão disponível
+- Escolha do banco de dados: mysql/postgresql, informe o nome de qual deseja usar
+- Nome do banco de dados
+- Usuário do banco de dados 
+- Senha do banco de dados 
 - Domínio para gerar o certificado SSL
 - E se deseja alocar memória para o Java, o Traccar usa java, e recomenta que aloque de 50% a 80% de memória do servidor, caso esteja usando apenas o Traccar no servidor.
 Leia mais aqui: https://www.traccar.org/optimization/
-Caso não queria alocar memória, a instalação ao perguntar quanto deseja usar, apenas aperte o ENTER, a instalação vai identificar a falta desse parametro e não vai modificar o arquivo de serviço.
+Caso não queria alocar memória, na instalação ao perguntar quanto deseja usar, apenas aperte o ENTER, a instalação vai identificar a falta desse parametro e não vai modificar o arquivo de serviço.
 
 No final da instalação, pode gerenciar o Traccar executando no terminal assim:
 

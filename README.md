@@ -52,8 +52,8 @@ Teste efetuados em servidor Hetzner com Ubuntu 20.04 e 22.04
 ## Desenvolvedores
 
 ### Programador
-- **Nome:** Tony Barros
-- **Email:** tonybarros@gmail.com
+- **Nome:** Tonny Barros
+- **Email:** tonnybarros@gmail.com
 - **Contato:** +55 21 97912-3851
 
 ### Colaborador

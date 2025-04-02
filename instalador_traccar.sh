@@ -140,7 +140,7 @@ configure_traccar() {
     <entry key='processing.remoteAddress.enable'>true</entry> <!--  informações de endereços IP do dispositivo -->
     <entry key='distance.enable'>true</entry> <!-- Calcule e acumule a distância percorrida para todos os dispositivos. O valor da distância está em metros e é armazenado nos atributos de posição. -->
     <!-- URL DE ACESSO EXTERNO PELOS APPS-->
-	<entry key='web.url'>http:/$DOMAIN</entry>
+	<entry key='web.url'>https://$DOMAIN</entry>
 </properties>
 
 EOL

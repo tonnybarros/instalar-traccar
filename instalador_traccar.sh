@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Instalador automático do Traccar com MySQL ou PostgreSQL e SSL via Nginx
-# 
+#
 # Programador: Tonny Barros
 # Email: tonnybarros@gmail.com
 # Contato: +55 21 97912-3851
-# 
+#
 # Colaborador: Michaell Oliveira
 # Email: michaelloliveira@gmail.com
 # Contato: +55 79 9116-5245
@@ -13,7 +13,7 @@
 # Changelog
 # [2025-03-24] Michaell Oliveira
 # * Refatorado
-# * Possibilidade de escolher a versão to Traccar 
+# * Possibilidade de escolher a versão to Traccar
 #   caso não escolha obtem a mais recente
 # * Possibilidade de escolher banco de dados:
 #   Mysql (padrão) ou Postgresql
@@ -22,7 +22,7 @@
 # * Mensagens mais informativas
 # * Verificação de erros
 
-set -e  # Para encerrar o script em caso de erro
+set -euo pipefail  # Encerrar o script em caso de erro e evitar variáveis não definidas
 
 clear
 display_banner() {
@@ -30,7 +30,7 @@ display_banner() {
     echo "████████╗██████╗  █████╗  ██████╗ ██████╗ █████╗ ██████╗ "
     echo "╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗██╔══██╗"
     echo "   ██║   ██████╔╝███████║██║     ██║     ███████║██████╔╝ "
-    echo "   ██║   ██╔══██╗██╔══██║██║     ██║     ██╔══██║██╔══██╗"
+    echo "   ██║   ██╔══██╗██╔══██║██║     ██║     ██║   ██╚══██╗"
     echo "   ██║   ██║  ██║██║  ██║╚██████╗╚██████╗██║  ██║██║  ██║"
     echo "   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝╚═════╝ ╚═╝  ╚═╝ v3.0"
     echo ""
@@ -41,15 +41,29 @@ display_banner() {
     read -p "Para iniciar, tecle ENTER"
 }
 
+DB_TYPE=""
+DB_NAME=""
+DB_USER=""
+DB_PASS=""
+DOMAIN=""
+MEMORY_PERCENT=""
+LATEST_VERSION=""
+TAG_VERSION=""
+ZIP_VERSION=""
+
 TOTAL_MEMORY_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')  # Memória total em KB
 TOTAL_MEMORY_MB=$((TOTAL_MEMORY_KB / 1024))  # Converter para MB
 
 get_user_input() {
-    
     read -p "Digite a versão do Traccar (Ex: 6.6 ou deixe em branco para a última versão): " LATEST_VERSION
 
     while [[ -z "$DB_TYPE" ]]; do
         read -p "Escolha o banco de dados (mysql/postgresql): " DB_TYPE
+        DB_TYPE=${DB_TYPE,,}
+        if [[ "$DB_TYPE" != "mysql" && "$DB_TYPE" != "postgresql" ]]; then
+            echo "Opção inválida. Digite 'mysql' ou 'postgresql'."
+            DB_TYPE=""
+        fi
     done
     while [[ -z "$DB_NAME" ]]; do
         read -p "Digite o nome do banco de dados para o Traccar: " DB_NAME
@@ -65,15 +79,24 @@ get_user_input() {
         read -p "Digite seu domínio (ex: rastreamento.meudominio.com): " DOMAIN
     done
     echo "A memória total do servidor é: ${TOTAL_MEMORY_MB}MB"
-    read -p "Digite a porcentagem da memória do servidor que deseja alocar para o Java (exemplo: 60 para 60%) (Deixe em branco para não editar o serviço): " MEMORY_PERCENT
-
+    while true; do
+        read -p "Digite a porcentagem da memória do servidor que deseja alocar para o Java (exemplo: 60 para 60%) (Deixe em branco para não editar o serviço): " MEMORY_PERCENT
+        if [[ -z "$MEMORY_PERCENT" ]]; then
+            break
+        elif [[ "$MEMORY_PERCENT" =~ ^([1-9][0-9]?|100)$ ]]; then
+            break
+        else
+            echo "Informe um valor entre 1 e 100 ou deixe em branco para manter a configuração padrão."
+            MEMORY_PERCENT=""
+        fi
+    done
 }
 
 install_dependencies() {
     # Detectar a distribuição
-    DISTRO=$(lsb_release -i | awk '{print $3}')
+    DISTRO=$(lsb_release -is 2>/dev/null || awk -F'=' '/^ID=/ {gsub("\"", "", $2); print tolower($2)}' /etc/os-release)
     
-    if [[ "$DISTRO" == "Ubuntu" || "$DISTRO" == "Debian" ]]; then
+    if [[ "$DISTRO" =~ ^(ubuntu|debian)$ ]]; then
         sudo apt update && sudo apt upgrade -y
         sudo apt install -y unzip openjdk-17-jre nginx certbot python3-certbot-nginx curl
         if [[ "$DB_TYPE" == "mysql" ]]; then
@@ -81,7 +104,7 @@ install_dependencies() {
         elif [[ "$DB_TYPE" == "postgresql" ]]; then
             sudo apt install -y postgresql postgresql-contrib
         fi
-    elif [[ "$DISTRO" == "Fedora" || "$DISTRO" == "CentOS" || "$DISTRO" == "AlmaLinux" ]]; then
+    elif [[ "$DISTRO" =~ ^(fedora|centos|almalinux|rhel)$ ]]; then
         sudo dnf update -y
         sudo dnf install -y unzip java-17-openjdk nginx certbot python3-certbot-nginx curl
         if [[ "$DB_TYPE" == "mysql" ]]; then
@@ -97,23 +120,37 @@ install_dependencies() {
 
 configure_database() {
     if [[ "$DB_TYPE" == "mysql" ]]; then
-        sudo mysql -e "CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+        sudo mysql -e "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
         sudo mysql -e "CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';"
-        sudo mysql -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';"
+        sudo mysql -e "GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';"
         sudo mysql -e "FLUSH PRIVILEGES;"
     elif [[ "$DB_TYPE" == "postgresql" ]]; then
-        sudo -u postgres psql -c "CREATE DATABASE $DB_NAME;"
-        sudo -u postgres psql -c "CREATE USER $DB_USER WITH ENCRYPTED PASSWORD '$DB_PASS';"
-        sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
+        sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1 || sudo -u postgres psql -c "CREATE DATABASE \"$DB_NAME\";"
+        sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}'" | grep -q 1 || sudo -u postgres psql -c "CREATE USER \"$DB_USER\" WITH ENCRYPTED PASSWORD '$DB_PASS';"
+        sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE \"$DB_NAME\" TO \"$DB_USER\";"
+    fi
+}
+
+resolve_traccar_version() {
+    if [[ -z "$LATEST_VERSION" ]]; then
+        LATEST_VERSION=$(curl -fsSL https://api.github.com/repos/traccar/traccar/releases/latest | awk -F '"' '/tag_name/ {print $4; exit}')
+    fi
+
+    TAG_VERSION=${LATEST_VERSION}
+    ZIP_VERSION=${LATEST_VERSION#v}
+
+    if [[ "$TAG_VERSION" != v* ]]; then
+        TAG_VERSION="v${TAG_VERSION}"
     fi
 }
 
 download_traccar() {
-    if [[ -z "$LATEST_VERSION" ]]; then
-        LATEST_VERSION=$(curl -s https://api.github.com/repos/traccar/traccar/releases/latest | grep tag_name | awk -F '"' '{print $4}')
-    fi
-    wget https://github.com/traccar/traccar/releases/download/$LATEST_VERSION/traccar-linux-64-${LATEST_VERSION:1}.zip
-    unzip -o traccar-linux-64-${LATEST_VERSION:1}.zip
+    resolve_traccar_version
+    local download_url="https://github.com/traccar/traccar/releases/download/${TAG_VERSION}/traccar-linux-64-${ZIP_VERSION}.zip"
+
+    echo "Baixando o Traccar da URL: ${download_url}"
+    wget -q --show-progress "$download_url"
+    unzip -o "traccar-linux-64-${ZIP_VERSION}.zip"
     sudo ./traccar.run
 }
 
@@ -122,7 +159,7 @@ configure_traccar() {
     DB_URL=""
     if [[ "$DB_TYPE" == "mysql" ]]; then
         DB_DRIVER="com.mysql.cj.jdbc.Driver"
-        DB_URL="jdbc:mysql://localhost:3306/$DB_NAME?allowPublicKeyRetrieval=true&amp;serverTimezone=UTC&amp;useSSL=false&amp;allowMultiQueries=true&amp;autoReconnect=true&amp;useUnicode=yes&amp;characterEncoding=UTF-8&amp;sessionVariables=sql_mode=''"
+        DB_URL="jdbc:mysql://localhost:3306/$DB_NAME?allowPublicKeyRetrieval=true&serverTimezone=UTC&useSSL=false&allowMultiQueries=true&autoReconnect=true&useUnicode=yes&characterEncoding=UTF-8&sessionVariables=sql_mode=''"
     elif [[ "$DB_TYPE" == "postgresql" ]]; then
         DB_DRIVER="org.postgresql.Driver"
         DB_URL="jdbc:postgresql://localhost:5432/$DB_NAME"
@@ -177,41 +214,44 @@ configure_ssl() {
 }
 
 configure_memory() {
-    # Calcular 60% da memória total do servidor em MB
-    if [ ! -z "$MEMORY_PERCENT" ]; then
+    if [[ -n "$MEMORY_PERCENT" ]]; then
         MAX_MEMORY_MB=$((TOTAL_MEMORY_MB * MEMORY_PERCENT / 100)) # Porcentagem de memória em MB
 
         echo "Configurando a memória máxima de uso do Java (Xmx) para ${MEMORY_PERCENT}% da memória total desse servidor: ${MAX_MEMORY_MB}MB"
-        sudo sed -i "s|ExecStart=/opt/traccar/jre/bin/java -jar tracker-server.jar conf/traccar.xml|ExecStart=/opt/traccar/jre/bin/java -Xmx${MAX_MEMORY_MB}m -jar tracker-server.jar conf/traccar.xml|" /etc/systemd/system/traccar.service
 
-        sudo systemctl daemon-reload
-        sudo systemctl restart traccar
+        if [[ -f /etc/systemd/system/traccar.service ]]; then
+            sudo sed -i "s|ExecStart=/opt/traccar/jre/bin/java -jar tracker-server.jar conf/traccar.xml|ExecStart=/opt/traccar/jre/bin/java -Xmx${MAX_MEMORY_MB}m -jar tracker-server.jar conf/traccar.xml|" /etc/systemd/system/traccar.service
+            sudo systemctl daemon-reload
+            sudo systemctl restart traccar
+        else
+            echo "Arquivo de serviço do Traccar não encontrado. Pulei a otimização de memória."
+        fi
     fi
 }
 
 insert_friendly_commands() {
-# Criando comandos amigáveis
-sudo tee /usr/local/bin/iniciar-traccar > /dev/null <<EOL
+    # Criando comandos amigáveis
+    sudo tee /usr/local/bin/iniciar-traccar > /dev/null <<EOL
 #!/bin/bash
 sudo systemctl start traccar
 EOL
-sudo tee /usr/local/bin/parar-traccar > /dev/null <<EOL
+    sudo tee /usr/local/bin/parar-traccar > /dev/null <<EOL
 #!/bin/bash
 sudo systemctl stop traccar
 EOL
-sudo tee /usr/local/bin/status-traccar > /dev/null <<EOL
+    sudo tee /usr/local/bin/status-traccar > /dev/null <<EOL
 #!/bin/bash
 sudo systemctl status traccar
 EOL
-sudo tee /usr/local/bin/reiniciar-traccar > /dev/null <<EOL
+    sudo tee /usr/local/bin/reiniciar-traccar > /dev/null <<EOL
 #!/bin/bash
 sudo systemctl restart traccar
 EOL
-sudo tee /usr/local/bin/log-traccar > /dev/null <<EOL
+    sudo tee /usr/local/bin/log-traccar > /dev/null <<EOL
 #!/bin/bash
 sudo tail -f /opt/traccar/logs/tracker-server.log
 EOL
-sudo tee /usr/local/bin/log-traccar-pesquisa > /dev/null <<EOL
+    sudo tee /usr/local/bin/log-traccar-pesquisa > /dev/null <<EOL
 #!/bin/bash
 if [ -z "\$1" ]; then
     echo "Por favor, forneça um termo de pesquisa."
@@ -220,11 +260,11 @@ if [ -z "\$1" ]; then
 fi
 sudo tail -f /opt/traccar/logs/tracker-server.log | grep --color=auto "\$1"
 EOL
-sudo tee /usr/local/bin/editar-traccar > /dev/null <<EOL
+    sudo tee /usr/local/bin/editar-traccar > /dev/null <<EOL
 #!/bin/bash
 sudo nano /opt/traccar/conf/traccar.xml
 EOL
-sudo chmod +x /usr/local/bin/iniciar-traccar /usr/local/bin/parar-traccar /usr/local/bin/status-traccar /usr/local/bin/reiniciar-traccar /usr/local/bin/log-traccar /usr/local/bin/editar-traccar /usr/local/bin/log-traccar-pesquisa
+    sudo chmod +x /usr/local/bin/iniciar-traccar /usr/local/bin/parar-traccar /usr/local/bin/status-traccar /usr/local/bin/reiniciar-traccar /usr/local/bin/log-traccar /usr/local/bin/editar-traccar /usr/local/bin/log-traccar-pesquisa
 }
 
 finish_installation() {
